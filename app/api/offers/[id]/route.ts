@@ -12,7 +12,7 @@ export async function GET(
   try {
     const { id } = await context.params;
 
-    const offer = getOffer(id);
+    const offer = await getOffer(id);
 
     if (!offer) {
       return NextResponse.json(
@@ -50,7 +50,7 @@ export async function PUT(
     const { id } = await context.params;
     const body = await request.json();
 
-    const existingOffer = getOffer(id);
+    const existingOffer = await getOffer(id);
 
     if (!existingOffer) {
       return NextResponse.json(
@@ -63,7 +63,7 @@ export async function PUT(
       );
     }
 
-    const updatedOffer = updateOffer(id, {
+    const updatedOffer = await updateOffer(id, {
       cropName: body.cropName ?? existingOffer.cropName,
       quantity: body.quantity ?? existingOffer.quantity,
       unit: body.unit ?? existingOffer.unit,
@@ -96,7 +96,7 @@ export async function DELETE(
   try {
     const { id } = await context.params;
 
-    const deleted = deleteOffer(id);
+    const deleted = await deleteOffer(id);
 
     if (!deleted) {
       return NextResponse.json(

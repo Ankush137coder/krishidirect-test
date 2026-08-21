@@ -15,7 +15,7 @@ export async function GET(
   try {
     const { id } = await context.params;
 
-    const order = getOrder(id);
+    const order = await getOrder(id);
 
     if (!order) {
       return NextResponse.json(
@@ -75,7 +75,7 @@ export async function PUT(
       );
     }
 
-    const result = changeOrderStatus(
+    const result = await changeOrderStatus(
       id,
       body.status
     );

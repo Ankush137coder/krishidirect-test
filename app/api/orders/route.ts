@@ -9,7 +9,7 @@ export async function GET() {
   try {
     return NextResponse.json({
       success: true,
-      data: getOrders(),
+      data: await getOrders(),
       error: null,
     });
   } catch {
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = createOrder({
+    const result = await createOrder({
       offerId: body.offerId,
       vendorId: body.vendorId,
       quantity: body.quantity,

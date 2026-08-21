@@ -1,33 +1,57 @@
-﻿import { orders } from "@/lib/db/mock-db";
+﻿import { pool } from "@/lib/db/mysql";
 import type { Order } from "@/types/backend";
 
-export function getAllOrders(): Order[] {
-  return orders;
+export async function getAllOrders(): Promise<Order[]> {
+  const [rows] = await pool.query("SELECT * FROM orders");
+  return rows as Order[];
 }
 
-export function getOrderById(id: string): Order | undefined {
-  return orders.find((order) => order.id === id);
+export async function getOrderById(id: string): Promise<Order | undefined> {
+  const [rows] = await pool.query("SELECT * FROM orders WHERE id = ?", [id]);
+  const results = rows as Order[];
+  return results[0];
 }
 
-export function saveOrder(order: Order): Order {
-  orders.push(order);
+export async function saveOrder(order: Order): Promise<Order> {
+  await pool.query(
+    `INSERT INTO orders (id, offerId, vendorId, quantity, totalAmount, status, createdAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [
+      order.id,
+      order.offerId,
+      order.vendorId,
+      order.quantity,
+      order.totalAmount,
+      order.status,
+      order.createdAt,
+    ]
+  );
   return order;
 }
 
-export function updateOrder(
+export async function updateOrder(
   id: string,
   updates: Partial<Order>
-): Order | undefined {
-  const index = orders.findIndex((order) => order.id === id);
-
-  if (index === -1) {
+): Promise<Order | undefined> {
+  const existing = await getOrderById(id);
+  if (!existing) {
     return undefined;
   }
 
-  orders[index] = {
-    ...orders[index],
-    ...updates,
-  };
+  const merged = { ...existing, ...updates };
 
-  return orders[index];
+  await pool.query(
+    `UPDATE orders SET offerId=?, vendorId=?, quantity=?, totalAmount=?, status=?, createdAt=? WHERE id=?`,
+    [
+      merged.offerId,
+      merged.vendorId,
+      merged.quantity,
+      merged.totalAmount,
+      merged.status,
+      merged.createdAt,
+      id,
+    ]
+  );
+
+  return merged;
 }

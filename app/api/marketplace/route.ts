@@ -3,7 +3,7 @@ import { getAllOffers } from "@/lib/repositories/offer-repository";
 
 export async function GET() {
   try {
-    const offers = getAllOffers();
+    const offers = await getAllOffers();
 
     return NextResponse.json({
       success: true,

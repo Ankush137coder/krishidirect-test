@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const offer = createOffer({
+    const offer = await createOffer({
       farmerId: body.farmerId,
       cropName: body.cropName,
       quantity: body.quantity,

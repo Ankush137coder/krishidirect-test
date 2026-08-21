@@ -1,45 +1,69 @@
-﻿import { offers } from "@/lib/db/mock-db";
+﻿import { pool } from "@/lib/db/mysql";
 import type { Offer } from "@/types/backend";
 
-export function getAllOffers(): Offer[] {
-  return offers;
+export async function getAllOffers(): Promise<Offer[]> {
+  const [rows] = await pool.query("SELECT * FROM offers");
+  return rows as Offer[];
 }
 
-export function getOfferById(id: string): Offer | undefined {
-  return offers.find((offer) => offer.id === id);
+export async function getOfferById(id: string): Promise<Offer | undefined> {
+  const [rows] = await pool.query("SELECT * FROM offers WHERE id = ?", [id]);
+  const results = rows as Offer[];
+  return results[0];
 }
 
-export function saveOffer(offer: Offer): Offer {
-  offers.push(offer);
+export async function saveOffer(offer: Offer): Promise<Offer> {
+  await pool.query(
+    `INSERT INTO offers (id, farmerId, cropName, quantity, unit, pricePerUnit, harvestDate, freshnessScore, status, createdAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      offer.id,
+      offer.farmerId,
+      offer.cropName,
+      offer.quantity,
+      offer.unit,
+      offer.pricePerUnit,
+      offer.harvestDate,
+      offer.freshnessScore,
+      offer.status,
+      offer.createdAt,
+    ]
+  );
   return offer;
 }
 
-export function updateOffer(
+export async function updateOffer(
   id: string,
   updates: Partial<Offer>
-): Offer | undefined {
-  const index = offers.findIndex((offer) => offer.id === id);
-
-  if (index === -1) {
+): Promise<Offer | undefined> {
+  const existing = await getOfferById(id);
+  if (!existing) {
     return undefined;
   }
 
-  offers[index] = {
-    ...offers[index],
-    ...updates,
-  };
+  const merged = { ...existing, ...updates };
 
-  return offers[index];
+  await pool.query(
+    `UPDATE offers SET farmerId=?, cropName=?, quantity=?, unit=?, pricePerUnit=?, harvestDate=?, freshnessScore=?, status=?, createdAt=? WHERE id=?`,
+    [
+      merged.farmerId,
+      merged.cropName,
+      merged.quantity,
+      merged.unit,
+      merged.pricePerUnit,
+      merged.harvestDate,
+      merged.freshnessScore,
+      merged.status,
+      merged.createdAt,
+      id,
+    ]
+  );
+
+  return merged;
 }
 
-export function deleteOffer(id: string): boolean {
-  const index = offers.findIndex((offer) => offer.id === id);
-
-  if (index === -1) {
-    return false;
-  }
-
-  offers.splice(index, 1);
-
-  return true;
+export async function deleteOffer(id: string): Promise<boolean> {
+  const [result] = await pool.query("DELETE FROM offers WHERE id = ?", [id]);
+  const info = result as { affectedRows: number };
+  return info.affectedRows > 0;
 }

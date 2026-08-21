@@ -18,13 +18,13 @@ export interface CreateOrderInput {
   quantity: number;
 }
 
-export function createOrder(
+export async function createOrder(
   input: CreateOrderInput
-):
+): Promise <
   | { success: true; order: Order }
-  | { success: false; error: string } {
-
-  const offer = getOfferById(input.offerId);
+  | { success: false; error: string }
+> {
+  const offer = await getOfferById(input.offerId);
 
   if (!offer) {
     return {
@@ -68,12 +68,12 @@ export function createOrder(
 
   const remainingQuantity = offer.quantity - input.quantity;
 
-  updateOffer(offer.id, {
+  await updateOffer(offer.id, {
     quantity: remainingQuantity,
     status: remainingQuantity === 0 ? "SOLD" : "ACTIVE",
   });
 
-  saveOrder(order);
+  await saveOrder(order);
 
   return {
     success: true,
@@ -81,12 +81,12 @@ export function createOrder(
   };
 }
 
-export function getOrders(): Order[] {
-  return getAllOrders();
+export async function getOrders(): Promise<Order[]> {
+  return await getAllOrders();
 }
 
-export function getOrder(id: string): Order | undefined {
-  return getOrderById(id);
+export async function getOrder(id: string): Promise<Order | undefined> {
+  return await getOrderById(id);
 }
 
 const validTransitions: Record<Order["status"], Order["status"][]> = {
@@ -96,14 +96,14 @@ const validTransitions: Record<Order["status"], Order["status"][]> = {
   CANCELLED: ["CANCELLED"],
 };
 
-export function changeOrderStatus(
+export async function changeOrderStatus(
   id: string,
   status: Order["status"]
-):
+): Promise<
   | { success: true; order: Order }
-  | { success: false; error: string; code: "NOT_FOUND" | "INVALID_TRANSITION" } {
-
-  const order = getOrderById(id);
+  | { success: false; error: string; code: "NOT_FOUND" | "INVALID_TRANSITION" }
+> {
+  const order = await getOrderById(id);
 
   if (!order) {
     return {
@@ -121,13 +121,8 @@ export function changeOrderStatus(
     };
   }
 
-  // If the order is being cancelled for the first time,
-  // return the reserved quantity to the original offer.
-  if (
-    status === "CANCELLED" &&
-    order.status !== "CANCELLED"
-  ) {
-    const offer = getOfferById(order.offerId);
+  if (status === "CANCELLED" && order.status !== "CANCELLED") {
+    const offer = await getOfferById(order.offerId);
 
     if (!offer) {
       return {
@@ -137,13 +132,13 @@ export function changeOrderStatus(
       };
     }
 
-    updateOffer(offer.id, {
+    await updateOffer(offer.id, {
       quantity: offer.quantity + order.quantity,
       status: "ACTIVE",
     });
   }
 
-  const updated = updateOrder(id, {
+  const updated = await updateOrder(id, {
     status,
   });
 

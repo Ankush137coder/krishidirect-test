@@ -14,7 +14,7 @@ export interface CreateOfferInput {
   pricePerUnit: number;
 }
 
-export function createOffer(input: CreateOfferInput): Offer {
+export async function createOffer(input: CreateOfferInput): Promise<Offer> {
   const now = new Date().toISOString();
 
   const newOffer: Offer = {
@@ -30,19 +30,20 @@ export function createOffer(input: CreateOfferInput): Offer {
     createdAt: now,
   };
 
-  return saveOffer(newOffer);
+  return await saveOffer(newOffer);
 }
 
-export function getOffer(id: string): Offer | undefined {
-  return getOfferById(id);
+export async function getOffer(id: string): Promise<Offer | undefined> {
+  return await getOfferById(id);
 }
-export function updateOffer(
+
+export async function updateOffer(
   id: string,
   updates: Partial<Offer>
-): Offer | undefined {
-  return updateOfferRepository(id, updates);
+): Promise<Offer | undefined> {
+  return await updateOfferRepository(id, updates);
 }
 
-export function deleteOffer(id: string): boolean {
-  return deleteOfferRepository(id);
+export async function deleteOffer(id: string): Promise<boolean> {
+  return await deleteOfferRepository(id);
 }
